@@ -104,7 +104,9 @@ class Furniq_Nav_Walker extends Walker_Nav_Menu {
  */
 function furniq_primary_menu() {
 	$wrap = '<ul id="menu-main" class="elementskit-navbar-nav elementskit-menu-po-right submenu-click-on-icon">%3$s</ul>';
-	if ( has_nav_menu( 'primary' ) ) {
+	$locations = get_nav_menu_locations();
+	$menu_id   = isset( $locations['primary'] ) ? (int) $locations['primary'] : 0;
+	if ( $menu_id && wp_get_nav_menu_object( $menu_id ) && wp_get_nav_menu_items( $menu_id ) ) {
 		wp_nav_menu(
 			array(
 				'theme_location' => 'primary',

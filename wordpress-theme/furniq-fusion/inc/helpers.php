@@ -145,8 +145,11 @@ function furniq_page_url( $slug ) {
  * @return string
  */
 function furniq_shop_url() {
-	if ( function_exists( 'wc_get_page_permalink' ) ) {
-		return wc_get_page_permalink( 'shop' );
+	if ( function_exists( 'wc_get_page_id' ) && wc_get_page_id( 'shop' ) > 0 ) {
+		return get_permalink( wc_get_page_id( 'shop' ) );
+	}
+	if ( post_type_exists( 'product' ) ) {
+		return get_post_type_archive_link( 'product' );
 	}
 	return home_url( '/shop/' );
 }
