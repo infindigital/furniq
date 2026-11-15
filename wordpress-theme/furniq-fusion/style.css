@@ -1,0 +1,17 @@
+/*
+Theme Name: Furniq Fusion
+Theme URI: https://furniqfusion.com/
+Author: Furniq Fusion
+Description: The Furniq Fusion furniture website as a WordPress theme. Reproduces the original design exactly, with every text, image, button and link editable from Appearance → Customize. Products come from WooCommerce and the blog from normal WordPress posts. Elementor is not required.
+Version: 1.0.0
+Requires at least: 6.4
+Tested up to: 6.9
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: furniq-fusion
+Tags: e-commerce, custom-logo, custom-menu, featured-images, theme-options
+*/
+
+/* The design itself is loaded from assets/ (see inc/assets.php).
+   assets/css/furniq.css holds the few extra rules for posts and plain pages. */

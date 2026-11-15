@@ -16,3 +16,9 @@ Then open http://localhost:8000/
 
 - Cart, checkout, the contact form and search need the WordPress backend, so in this static copy they don't work on their own. Cart and checkout links still go to the live site.
 - Google Fonts, Google Maps and WordPress emoji load from their original hosts, as on the live site.
+
+## WordPress theme
+
+`wordpress-theme/furniq-fusion.zip` is the same site as an editable WordPress theme
+(products via WooCommerce, blog via Posts, all texts and images in Appearance → Customize).
+See [wordpress-theme/README.md](wordpress-theme/README.md) for install and usage.
