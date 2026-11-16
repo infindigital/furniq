@@ -22,6 +22,33 @@ original site. Products come from **WooCommerce**, blog posts are normal WordPre
    online while you import.
 4. **Settings → Permalinks** → choose **Post name** → **Save** (gives `/shop/`, `/about/` … URLs).
 
+## Switching your existing furniqfusion.com site to this theme
+
+Your products, categories, posts, pages, media and orders stay exactly as they are –
+the theme never adds, changes or deletes products (the "Download products file" notice
+only appears on a site with no products at all).
+
+1. **Back up the site first** (your host's backup or a plugin like UpdraftPlus).
+2. Upload and activate the theme. Your existing Home, About, Blog, FAQ and Contact
+   pages are reused and shown in the Furniq design; the Blog page starts listing your
+   posts. WooCommerce stays as it is.
+3. Check the site, then you can deactivate **Elementor, Pro Elements, ElementsKit and
+   Happy Addons** – the theme contains everything it needs from them. (Keep them if you
+   use them for other pages.) Deactivating does not delete anything.
+4. Analytics plugins (Site Kit, MonsterInsights, Meta Pixel…) keep working unchanged.
+
+## Analytics
+
+**Appearance → Customize → Furniq: Analytics & tracking**
+
+- **Google Analytics 4 Measurement ID** (G-XXXXXXXXXX). Leave it empty if a plugin
+  such as Site Kit already adds Google Analytics, so visits are not counted twice.
+- **Code in &lt;head&gt; / before &lt;/body&gt;** – paste Google Tag Manager, Meta Pixel,
+  Microsoft Clarity, Search Console verification tags, etc.
+- Automatic events: `generate_lead` (with the product name) when any form is sent and
+  `whatsapp_click` when a WhatsApp button is clicked – mark `generate_lead` as a *key
+  event* in Google Analytics to count enquiries.
+
 ## Add a product
 
 **Products → Add New**
@@ -70,9 +97,14 @@ Leaving a field empty brings back the original text or image.
 ## Forms
 
 The contact, FAQ and enquiry popup forms are emailed to the site admin (or the address
-in *Contact & social*) and also saved in **Tools → Furniq enquiries**, so nothing is
-lost if the host's email isn't set up. An SMTP plugin (e.g. WP Mail SMTP) is
-recommended for reliable email.
+in *Contact & social*) and also saved in **Tools → Furniq enquiries** with name, email,
+phone and product in separate columns. **Download CSV** there exports all of them
+(opens in Excel / Google Sheets, or import it into Mailchimp etc.). Nothing is lost if
+the host's email isn't set up, but an SMTP plugin (e.g. WP Mail SMTP) is recommended
+for reliable email.
+
+Developers can pass each submission elsewhere (e.g. a newsletter list) with the
+`furniq_form_submitted` action: `add_action( 'furniq_form_submitted', function ( $fields ) { … } );`
 
 ## For developers
 

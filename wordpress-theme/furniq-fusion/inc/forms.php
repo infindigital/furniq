@@ -56,6 +56,7 @@ function furniq_handle_form() {
 	$referrer = isset( $_POST['referrer'] ) ? esc_url_raw( wp_unslash( $_POST['referrer'] ) ) : '';
 	// phpcs:enable
 
+	$name  = isset( $fields['name'] ) ? $fields['name'] : '';
 	$lines = array();
 	foreach ( $fields as $k => $v ) {
 		$label   = isset( $labels[ $k ] ) ? $labels[ $k ] : ucwords( str_replace( '_', ' ', $k ) );
@@ -74,10 +75,9 @@ function furniq_handle_form() {
 		? sprintf( __( 'Product enquiry: %s', 'furniq-fusion' ), $fields['field_a0eac2e'] )
 		/* translators: %s: site name */
 		: sprintf( __( 'New message from %s', 'furniq-fusion' ), get_bloginfo( 'name' ) );
-	$name    = isset( $fields['name'] ) ? $fields['name'] : '';
 	$headers = array( 'Reply-To: ' . ( $name ? $name . ' <' . $email . '>' : $email ) );
 
-	wp_insert_post(
+	$enquiry_id = wp_insert_post(
 		array(
 			'post_type'    => 'furniq_enquiry',
 			'post_status'  => 'private',
@@ -85,6 +85,27 @@ function furniq_handle_form() {
 			'post_content' => $body,
 		)
 	);
+	if ( $enquiry_id && ! is_wp_error( $enquiry_id ) ) {
+		$meta = array(
+			'_furniq_name'    => $name,
+			'_furniq_email'   => $email,
+			'_furniq_phone'   => isset( $fields['field_4f58c1e'] ) ? $fields['field_4f58c1e'] : '',
+			'_furniq_product' => isset( $fields['field_a0eac2e'] ) ? $fields['field_a0eac2e'] : '',
+			'_furniq_message' => isset( $fields['message'] ) ? $fields['message'] : '',
+			'_furniq_page'    => $referrer,
+		);
+		foreach ( $meta as $k => $v ) {
+			update_post_meta( $enquiry_id, $k, $v );
+		}
+	}
+
+	/**
+	 * Fires after a form was sent – e.g. to pass the email to a newsletter service.
+	 *
+	 * @param array $fields Sanitised form fields (name, email, message, field_… ).
+	 * @param int   $enquiry_id Saved enquiry id.
+	 */
+	do_action( 'furniq_form_submitted', $fields, $enquiry_id );
 	wp_mail( $to, $subject, $body, $headers );
 
 	wp_send_json_success(
@@ -119,5 +140,98 @@ add_action(
 				'map_meta_cap'    => true,
 			)
 		);
+	}
+);
+
+/**
+ * Columns in Tools → Furniq enquiries.
+ */
+add_filter(
+	'manage_furniq_enquiry_posts_columns',
+	function () {
+		return array(
+			'cb'      => '<input type="checkbox" />',
+			'title'   => __( 'Enquiry', 'furniq-fusion' ),
+			'fname'   => __( 'Name', 'furniq-fusion' ),
+			'femail'  => __( 'Email', 'furniq-fusion' ),
+			'fphone'  => __( 'Phone', 'furniq-fusion' ),
+			'fprod'   => __( 'Product', 'furniq-fusion' ),
+			'date'    => __( 'Date', 'furniq-fusion' ),
+		);
+	}
+);
+add_action(
+	'manage_furniq_enquiry_posts_custom_column',
+	function ( $column, $post_id ) {
+		$map = array(
+			'fname'  => '_furniq_name',
+			'femail' => '_furniq_email',
+			'fphone' => '_furniq_phone',
+			'fprod'  => '_furniq_product',
+		);
+		if ( isset( $map[ $column ] ) ) {
+			$value = get_post_meta( $post_id, $map[ $column ], true );
+			if ( 'femail' === $column && $value ) {
+				echo '<a href="mailto:' . esc_attr( $value ) . '">' . esc_html( $value ) . '</a>';
+			} else {
+				echo esc_html( $value );
+			}
+		}
+	},
+	10,
+	2
+);
+
+/**
+ * "Download CSV" button above the enquiries list.
+ */
+add_action(
+	'manage_posts_extra_tablenav',
+	function ( $which ) {
+		$screen = get_current_screen();
+		if ( 'top' !== $which || ! $screen || 'furniq_enquiry' !== $screen->post_type || ! current_user_can( 'edit_posts' ) ) {
+			return;
+		}
+		$url = wp_nonce_url( admin_url( 'admin-post.php?action=furniq_export_enquiries' ), 'furniq_export' );
+		echo '<div class="alignleft actions"><a class="button button-primary" href="' . esc_url( $url ) . '">' . esc_html__( 'Download CSV (all enquiries)', 'furniq-fusion' ) . '</a></div>';
+	}
+);
+
+add_action(
+	'admin_post_furniq_export_enquiries',
+	function () {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'furniq-fusion' ) );
+		}
+		check_admin_referer( 'furniq_export' );
+		$posts = get_posts(
+			array(
+				'post_type'   => 'furniq_enquiry',
+				'post_status' => 'any',
+				'numberposts' => -1,
+				'orderby'     => 'date',
+				'order'       => 'DESC',
+			)
+		);
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=furniq-enquiries-' . gmdate( 'Y-m-d' ) . '.csv' );
+		$out = fopen( 'php://output', 'w' );
+		fwrite( $out, "\xEF\xBB\xBF" ); // UTF-8 BOM so Excel shows accents correctly.
+		fputcsv( $out, array( 'Date', 'Name', 'Email', 'Phone', 'Product', 'Message', 'Page' ) );
+		foreach ( $posts as $p ) {
+			$row = array( get_the_date( 'Y-m-d H:i', $p ) );
+			foreach ( array( '_furniq_name', '_furniq_email', '_furniq_phone', '_furniq_product', '_furniq_message', '_furniq_page' ) as $k ) {
+				$v = (string) get_post_meta( $p->ID, $k, true );
+				// Stop spreadsheet formula injection.
+				if ( '' !== $v && ( in_array( $v[0], array( '=', '@' ), true ) || ( in_array( $v[0], array( '+', '-' ), true ) && ! preg_match( '/^[+\-][\d\s()\-]+$/', $v ) ) ) ) {
+					$v = "'" . $v;
+				}
+				$row[] = $v;
+			}
+			fputcsv( $out, $row );
+		}
+		fclose( $out );
+		exit;
 	}
 );

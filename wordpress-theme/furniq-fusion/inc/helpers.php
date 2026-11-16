@@ -272,11 +272,19 @@ function furniq_context() {
 	} elseif ( is_home() ) {
 		$ctx = 'blog';
 	} elseif ( is_page() ) {
-		$tpl = get_page_template_slug();
+		$tpl  = get_page_template_slug();
+		$slug = get_post_field( 'post_name', get_queried_object_id() );
 		foreach ( array( 'about', 'faq', 'contact' ) as $design ) {
 			if ( 'page-templates/' . $design . '.php' === $tpl ) {
 				$ctx = $design;
 			}
+			// Pages kept from the original Elementor site (Elementor template, Elementor not needed).
+			if ( $slug === $design && ( '' === $tpl || 0 === strpos( $tpl, 'elementor_' ) ) ) {
+				$ctx = $design;
+			}
+		}
+		if ( 'blog' === $slug && ( '' === $tpl || 0 === strpos( $tpl, 'elementor_' ) ) ) {
+			$ctx = 'blog';
 		}
 	}
 	return $ctx;

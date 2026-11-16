@@ -21,4 +21,5 @@ require FURNIQ_DIR . '/inc/customizer.php';
 require FURNIQ_DIR . '/inc/blog.php';
 require FURNIQ_DIR . '/inc/woocommerce.php';
 require FURNIQ_DIR . '/inc/forms.php';
+require FURNIQ_DIR . '/inc/analytics.php';
 require FURNIQ_DIR . '/inc/admin.php';

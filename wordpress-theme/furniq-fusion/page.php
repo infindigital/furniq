@@ -8,6 +8,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// About / FAQ / Contact / Blog pages carried over from the original Elementor site.
+if ( in_array( furniq_context(), array( 'about', 'faq', 'contact', 'blog' ), true ) ) {
+	get_header();
+	furniq_part( 'main-' . furniq_context() );
+	get_footer();
+	return;
+}
+
 get_header();
 get_template_part( 'parts/content-wrap-start' );
 while ( have_posts() ) :

@@ -117,7 +117,9 @@ function furniq_setup_site() {
 				)
 			);
 		}
-		if ( $info[1] && $ids[ $slug ] && ! is_wp_error( $ids[ $slug ] ) && ! get_page_template_slug( $ids[ $slug ] ) ) {
+		// Empty or Elementor page templates (from the original site) get the Furniq design.
+		$current = $ids[ $slug ] && ! is_wp_error( $ids[ $slug ] ) ? get_page_template_slug( $ids[ $slug ] ) : 'x';
+		if ( $info[1] && ( '' === $current || 0 === strpos( $current, 'elementor_' ) ) ) {
 			update_post_meta( $ids[ $slug ], '_wp_page_template', $info[1] );
 		}
 	}
@@ -125,6 +127,9 @@ function furniq_setup_site() {
 	if ( 'page' !== get_option( 'show_on_front' ) || ! get_option( 'page_on_front' ) ) {
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $ids['home'] );
+	}
+	// The Blog page lists the posts (the original site used a static Elementor page).
+	if ( ! get_option( 'page_for_posts' ) && (int) get_option( 'page_on_front' ) !== (int) $ids['blog'] ) {
 		update_option( 'page_for_posts', $ids['blog'] );
 	}
 
